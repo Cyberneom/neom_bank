@@ -3,11 +3,11 @@ import 'package:neom_core/app_config.dart';
 import 'package:neom_core/data/firestore/constants/app_firestore_collection_constants.dart';
 import 'package:neom_core/data/firestore/constants/app_firestore_constants.dart';
 import 'package:neom_core/domain/model/app_transaction.dart';
+import 'package:neom_core/domain/model/wallet.dart';
+import 'package:neom_core/domain/repository/wallet_repository.dart';
 import 'package:neom_core/utils/enums/transaction_type.dart';
-import '../../domain/models/wallet.dart';
-import '../../domain/repository/wallet_repository.dart';
+import 'package:neom_core/utils/enums/wallet_status.dart';
 import '../../utils/constants/bank_constants.dart';
-import '../../utils/enums/wallet_status.dart';
 
 class WalletFirestore implements WalletRepository {
 

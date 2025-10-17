@@ -1,34 +1,35 @@
 import 'dart:async';
 
 import 'package:get/get.dart';
-import 'package:neom_commons/utils/constants/message_translation_constants.dart';
+import 'package:neom_commons/utils/constants/translations/message_translation_constants.dart';
 import 'package:neom_core/app_config.dart';
 import 'package:neom_core/data/firestore/transaction_firestore.dart';
 import 'package:neom_core/domain/model/app_transaction.dart';
+import 'package:neom_core/domain/model/wallet.dart';
+import 'package:neom_core/domain/use_cases/bank_service.dart';
 import 'package:neom_core/utils/enums/transaction_status.dart';
 import 'package:neom_core/utils/enums/transaction_type.dart';
 
-import '../../domain/models/wallet.dart';
 import '../../utils/constants/bank_constants.dart';
 import '../firestore/wallet_firestore.dart';
 
-class AppBankController {
+class BankController implements BankService {
 
-  static final AppBankController _instance = AppBankController._internal();
+  static final BankController _instance = BankController._internal();
 
-  factory AppBankController() {
-    _instance._init();
+  factory BankController() {
+    _instance.init();
     return _instance;
   }
 
-  AppBankController._internal();
+  BankController._internal();
   bool _isInitialized = false;
 
   TransactionStatus transactiontStatus = TransactionStatus.pending;
   Wallet wallet = Wallet();
 
-  /// Inicialización manual para controlar mejor el ciclo de vida
-  Future<void> _init() async {
+  @override
+  Future<void> init() async {
     if (_isInitialized) return;
     _isInitialized = true;
 
@@ -41,6 +42,7 @@ class AppBankController {
     }
   }
 
+  @override
   Future<bool> processTransaction(AppTransaction transaction) async {
     AppConfig.logger.d('Processing transaction: ${transaction.id}');
 
@@ -69,6 +71,7 @@ class AppBankController {
     return transaction.status == TransactionStatus.completed;
   }
 
+  @override
   Future<bool> addCoinsToWallet(String walletId, double amount, {TransactionType transactionType = TransactionType.purchase}) async {
     AppConfig.logger.d('Adding $amount coins to wallet: $walletId');
 

@@ -2,15 +2,16 @@ import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
-import 'package:neom_commons/utils/constants/app_translation_constants.dart';
+import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
 import 'package:neom_core/domain/model/app_product.dart';
 import 'package:neom_core/utils/core_utilities.dart';
 import 'package:neom_core/utils/enums/app_currency.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
+import '../../utils/constants/bank_translation_constants.dart';
 import '../wallet_controller.dart';
 
-void showGetAppcoinsAlert(BuildContext context, WalletController _) {
+void showGetAppCoinsAlert(BuildContext context, WalletController _) {
   Alert(
       context: context,
       style: AlertStyle(
@@ -18,13 +19,13 @@ void showGetAppcoinsAlert(BuildContext context, WalletController _) {
           titleStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           titleTextAlign: TextAlign.justify
       ),
-      title: AppTranslationConstants.acquireAppCoinsMsg.tr,
+      title: BankTranslationConstants.acquireAppCoinsMsg.tr,
       content: Column(
         children: <Widget>[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("${AppTranslationConstants.appCoinsToAcquire.tr}:",
+              Text("${BankTranslationConstants.appCoinsToAcquire.tr}:",
                 style: const TextStyle(fontSize: 15),
               ),
               Obx(()=> DropdownButton<AppProduct>(
@@ -54,7 +55,7 @@ void showGetAppcoinsAlert(BuildContext context, WalletController _) {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("${AppTranslationConstants.paymentCurrency.tr}: ",
+              Text("${CommonTranslationConstants.paymentCurrency.tr}: ",
                 style: const TextStyle(fontSize: 15),
               ),
               Obx(()=> DropdownButton<String>(
@@ -89,7 +90,7 @@ void showGetAppcoinsAlert(BuildContext context, WalletController _) {
           Obx(()=> Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("${AppTranslationConstants.totalToPay.tr.capitalizeFirst}:",
+              Text("${CommonTranslationConstants.totalToPay.tr.capitalizeFirst}:",
                 style: const TextStyle(fontSize: 15),
               ),
               Row(
@@ -114,7 +115,7 @@ void showGetAppcoinsAlert(BuildContext context, WalletController _) {
           },
           child: Obx(()=> _.isLoading.value
               ? const Center(child: CircularProgressIndicator())
-              : Text(AppTranslationConstants.proceedToOrder.tr,
+              : Text(BankTranslationConstants.proceedToOrder.tr,
             style: const TextStyle(fontSize: 15),
           ),
           ),

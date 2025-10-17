@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/utils/constants/app_assets.dart';
-import 'package:neom_commons/utils/constants/app_translation_constants.dart';
 
+import '../../utils/constants/bank_translation_constants.dart';
 import '../wallet_controller.dart';
 
 Widget buildNoHistoryToShow(BuildContext context, WalletController _){
@@ -13,7 +13,7 @@ Widget buildNoHistoryToShow(BuildContext context, WalletController _){
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[        
         Text(
-          AppTranslationConstants.appCoinComingSoon.tr,
+          BankTranslationConstants.appCoinComingSoon.tr,
           style: const TextStyle(
             fontSize: 20.0,
             fontWeight: FontWeight.bold,
@@ -25,7 +25,7 @@ Widget buildNoHistoryToShow(BuildContext context, WalletController _){
         Image.asset(AppAssets.appCoin, height: 150),
         AppTheme.heightSpace20,
         Text(
-          AppTranslationConstants.noHistoryToShow.tr,
+          BankTranslationConstants.noHistoryToShow.tr,
           style: const TextStyle(
             fontSize: 20.0,
             fontWeight: FontWeight.bold,

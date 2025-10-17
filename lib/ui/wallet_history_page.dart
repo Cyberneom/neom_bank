@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/ui/widgets/appbar_child.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
-import 'package:neom_commons/utils/constants/app_translation_constants.dart';
+import 'package:neom_commons/utils/constants/translations/app_translation_constants.dart';
 import 'package:neom_core/domain/model/app_transaction.dart';
+import 'package:neom_core/utils/enums/wallet_status.dart';
 
-import '../utils/enums/wallet_status.dart';
+import '../utils/constants/bank_translation_constants.dart';
 import 'wallet_controller.dart';
 import 'widgets/transaction_tile.dart';
 import 'widgets/wallet_card.dart';
@@ -26,7 +28,7 @@ class WalletHistoryPage extends StatelessWidget {
             preferredSize: const Size.fromHeight(50),
             child: AppBarChild(title: AppTranslationConstants.wallet.tr)
         ),
-        backgroundColor: AppColor.main50,
+        backgroundColor: AppFlavour.getBackgroundColor(),
         body: Stack(
           children: [
             Container(
@@ -46,7 +48,7 @@ class WalletHistoryPage extends StatelessWidget {
                     SizedBox(
                       width: AppTheme.fullWidth(context),
                       child: Text(
-                        AppTranslationConstants.transactionsHistory.tr,
+                        BankTranslationConstants.transactionsHistory.tr,
                         style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
                         textAlign: TextAlign.center,
                       ),
@@ -84,7 +86,7 @@ class WalletHistoryPage extends StatelessWidget {
                             ),
                             AppTheme.heightSpace20,
                             Text(
-                              AppTranslationConstants.walletNotActive.tr,
+                              BankTranslationConstants.walletNotActive.tr,
                               style: const TextStyle(
                                 fontSize: 22.0,
                                 fontWeight: FontWeight.bold,
@@ -94,7 +96,7 @@ class WalletHistoryPage extends StatelessWidget {
                             ),
                             AppTheme.heightSpace10,
                             Text(
-                              AppTranslationConstants.contactSupportForActivation.tr,
+                              BankTranslationConstants.contactSupportForActivation.tr,
                               style: const TextStyle(
                                 fontSize: 16.0,
                                 color: Colors.white70,

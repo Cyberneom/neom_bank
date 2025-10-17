@@ -5,22 +5,22 @@ import 'package:neom_core/app_config.dart';
 import 'package:neom_core/data/firestore/order_firestore.dart';
 import 'package:neom_core/data/firestore/product_firestore.dart';
 import 'package:neom_core/data/firestore/transaction_firestore.dart';
-import 'package:neom_core/data/implementations/user_controller.dart';
 import 'package:neom_core/domain/model/app_order.dart';
 import 'package:neom_core/domain/model/app_product.dart';
 import 'package:neom_core/domain/model/app_transaction.dart';
+import 'package:neom_core/domain/model/wallet.dart';
+import 'package:neom_core/domain/use_cases/user_service.dart';
+import 'package:neom_core/domain/use_cases/wallet_service.dart';
 import 'package:neom_core/utils/constants/app_payment_constants.dart';
 import 'package:neom_core/utils/constants/app_route_constants.dart';
 import 'package:neom_core/utils/enums/app_currency.dart';
 import 'package:neom_core/utils/enums/product_type.dart';
 
 import '../data/firestore/wallet_firestore.dart';
-import '../domain/models/wallet.dart';
-import '../domain/use_cases/wallet_service.dart';
 
 class WalletController extends GetxController implements WalletService  {
 
-  final userController = Get.find<UserController>();
+  final userServiceImpl = Get.find<UserService>();
 
   RxBool isLoading = true.obs;
 
@@ -47,7 +47,7 @@ class WalletController extends GetxController implements WalletService  {
     try {
       loadWalletInfo();
       // loadOrders();
-      transaction?.senderId = userController.user.email;
+      transaction?.senderId = userServiceImpl.user.email;
     } catch (e) {
       AppConfig.logger.e(e);
     }
@@ -64,7 +64,7 @@ class WalletController extends GetxController implements WalletService  {
   }
 
   Future<void> loadWalletInfo() async {
-    AppConfig.logger.d("Loading Wallet Info for ${userController.user.email}");
+    AppConfig.logger.d("Loading Wallet Info for ${userServiceImpl.user.email}");
 
     try {
       await loadWallet();
@@ -80,14 +80,14 @@ class WalletController extends GetxController implements WalletService  {
     update([AppPageIdConstants.walletHistory]);
   }
   Future<void> loadWallet() async {
-    AppConfig.logger.t("Loading Wallet for ${userController.user.email}");
-    wallet = await WalletFirestore().getOrCreate(userController.user.email);
+    AppConfig.logger.t("Loading Wallet for ${userServiceImpl.user.email}");
+    wallet = await WalletFirestore().getOrCreate(userServiceImpl.user.email);
   }
 
   Future<void> loadTransactions() async {
-    AppConfig.logger.d("Loading Transactions for ${userController.user.email}");
+    AppConfig.logger.d("Loading Transactions for ${userServiceImpl.user.email}");
 
-    transactions = await TransactionFirestore().retrieveByEmail(userController.user.email);
+    transactions = await TransactionFirestore().retrieveByEmail(userServiceImpl.user.email);
     List<AppTransaction> transactionsToSort = transactions.values.toList();
     transactionsToSort.sort((a, b) => a.createdTime.compareTo(b.createdTime));
     transactions.clear();
@@ -97,9 +97,9 @@ class WalletController extends GetxController implements WalletService  {
   }
 
   Future<void> loadOrders() async {
-    AppConfig.logger.d("Loading Orders for ${userController.user.email}");
+    AppConfig.logger.d("Loading Orders for ${userServiceImpl.user.email}");
 
-    orders = await OrderFirestore().retrieveFromList(userController.user.orderIds);
+    orders = await OrderFirestore().retrieveFromList(userServiceImpl.user.orderIds);
     List<AppOrder> ordersToSort = orders.values.toList();
     ordersToSort.sort((a, b) => a.createdTime.compareTo(b.createdTime));
     orders.clear();
