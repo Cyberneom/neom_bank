@@ -20,7 +20,7 @@ class WalletCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<WalletController>(
       id: AppPageIdConstants.walletHistory, // Ensure this ID matches if you update from controller
-      builder: (_) => Container(
+      builder: (controller) => Container(
         height: MediaQuery.of(context).size.width / 2, // Slightly taller for more content space
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(20.0)), // Slightly less rounded
@@ -74,7 +74,7 @@ class WalletCard extends StatelessWidget {
                     color: Colors.white.withOpacity(0.7),
                     size: 30,
                   ),
-                  if(_.sellAppCoins) IconButton(
+                  if(controller.sellAppCoins) IconButton(
                     iconSize: 30,
                     icon: CircleAvatar(
                       radius: 15,
@@ -86,7 +86,7 @@ class WalletCard extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      showGetAppCoinsAlert(context, _);
+                      showGetAppCoinsAlert(context, controller);
                     },
                   ),
                 ],
@@ -105,8 +105,8 @@ class WalletCard extends StatelessWidget {
                     ),
                     AppTheme.heightSpace10, // Increased space
                     Text(
-                      // Ensure _.wallet.balance is available and is a number
-                      (_.wallet?.balance.truncate() ?? 0).toString().replaceAllMapped(
+                      // Ensure controller.wallet.balance is available and is a number
+                      (controller.wallet?.balance.truncate() ?? 0).toString().replaceAllMapped(
                           RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'),
                       style: const TextStyle(
                         fontSize: 40, // Prominent balance
@@ -121,7 +121,7 @@ class WalletCard extends StatelessWidget {
 
               /// Bottom Row: Dummy Card Number
               // Text(
-              //   "**** **** **** ${_.wallet.id.isNotEmpty ? _.wallet.id.substring(_.wallet.id.length - min(4,_.wallet.id.length)) : '****'}", // Display last 4 digits of wallet ID or a placeholder
+              //   "**** **** **** ${controller.wallet.id.isNotEmpty ? controller.wallet.id.substring(controller.wallet.id.length - min(4,controller.wallet.id.length)) : '****'}", // Display last 4 digits of wallet ID or a placeholder
               //   style: TextStyle(
               //     fontSize: 15,
               //     color: Colors.white.withOpacity(0.75),

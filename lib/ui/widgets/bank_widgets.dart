@@ -11,7 +11,7 @@ import 'package:rflutter_alert/rflutter_alert.dart';
 import '../../utils/constants/bank_translation_constants.dart';
 import '../wallet_controller.dart';
 
-void showGetAppCoinsAlert(BuildContext context, WalletController _) {
+void showGetAppCoinsAlert(BuildContext context, WalletController controller) {
   Alert(
       context: context,
       style: AlertStyle(
@@ -29,16 +29,16 @@ void showGetAppCoinsAlert(BuildContext context, WalletController _) {
                 style: const TextStyle(fontSize: 15),
               ),
               Obx(()=> DropdownButton<AppProduct>(
-                items: _.appCoinProducts.map((AppProduct product) {
+                items: controller.appCoinProducts.map((AppProduct product) {
                   return DropdownMenuItem<AppProduct>(
                     value: product,
                     child: Text(product.qty.toString()),
                   );
                 }).toList(),
                 onChanged: (AppProduct? newProduct) {
-                  _.changeAppCoinProduct(newProduct!);
+                  controller.changeAppCoinProduct(newProduct!);
                 },
-                value: _.appCoinProduct.value,
+                value: controller.appCoinProduct.value,
                 alignment: Alignment.center,
                 icon: const Icon(Icons.arrow_downward),
                 iconSize: 20,
@@ -67,12 +67,12 @@ void showGetAppCoinsAlert(BuildContext context, WalletController _) {
                 }).where((currency) => currency.value != AppCurrency.appCoin.name)
                     .toList(),
                 onChanged: (String? paymentCurrencyStr) {
-                  _.changePaymentCurrency(newCurrency:
+                  controller.changePaymentCurrency(newCurrency:
                   EnumToString.fromString(AppCurrency.values, paymentCurrencyStr ?? AppCurrency.mxn.name)
                       ?? AppCurrency.mxn
                   );
                 },
-                value: _.paymentCurrency.value.name,
+                value: controller.paymentCurrency.value.name,
                 alignment: Alignment.center,
                 icon: const Icon(Icons.arrow_downward),
                 iconSize: 20,
@@ -95,7 +95,7 @@ void showGetAppCoinsAlert(BuildContext context, WalletController _) {
               ),
               Row(
                 children: [
-                  Text("${CoreUtilities.getCurrencySymbol(_.paymentCurrency.value)} ${_.paymentAmount.value}",
+                  Text("${CoreUtilities.getCurrencySymbol(controller.paymentCurrency.value)} ${controller.paymentAmount.value}",
                     style: const TextStyle(fontSize: 15),
                   ),
                 ],
@@ -109,11 +109,11 @@ void showGetAppCoinsAlert(BuildContext context, WalletController _) {
         DialogButton(
           color: AppColor.bondiBlue75,
           onPressed: () async {
-            if(!_.isButtonDisabled.value) {
-              await _.payAppProduct(context);
+            if(!controller.isButtonDisabled.value) {
+              await controller.payAppProduct(context);
             }
           },
-          child: Obx(()=> _.isLoading.value
+          child: Obx(()=> controller.isLoading.value
               ? const Center(child: CircularProgressIndicator())
               : Text(BankTranslationConstants.proceedToOrder.tr,
             style: const TextStyle(fontSize: 15),

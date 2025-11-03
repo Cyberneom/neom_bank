@@ -23,7 +23,7 @@ class WalletHistoryPage extends StatelessWidget {
     return GetBuilder<WalletController>(
       id: AppPageIdConstants.walletHistory,
       init: WalletController(),
-      builder: (_) => Scaffold(
+      builder: (controller) => Scaffold(
         appBar:  PreferredSize(
             preferredSize: const Size.fromHeight(50),
             child: AppBarChild(title: AppTranslationConstants.wallet.tr)
@@ -34,7 +34,7 @@ class WalletHistoryPage extends StatelessWidget {
             Container(
               decoration: AppTheme.appBoxDecoration,
               height: AppTheme.fullHeight(context),
-              child: _.isLoading.value ? const Center(child: CircularProgressIndicator())
+              child: controller.isLoading.value ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,19 +56,19 @@ class WalletHistoryPage extends StatelessWidget {
                     Divider(thickness: 1, color: AppColor.white80),
                     SizedBox(
                       height: AppTheme.fullHeight(context)*0.5,
-                      child: _.transactions.isNotEmpty ? ListView.builder(
-                          itemCount: _.transactions.length,
+                      child: controller.transactions.isNotEmpty ? ListView.builder(
+                          itemCount: controller.transactions.length,
                           itemBuilder: (context, index) {
-                            AppTransaction transaction = _.transactions.values.elementAt(index);
-                            return TransactionTile(transaction: transaction, walletId: _.wallet?.id ?? '',);
+                            AppTransaction transaction = controller.transactions.values.elementAt(index);
+                            return TransactionTile(transaction: transaction, walletId: controller.wallet?.id ?? '',);
                           }
-                      ) :  buildNoHistoryToShow(context, _),
+                      ) :  buildNoHistoryToShow(context, controller),
                     ),
                   ],
                 ),
               ),
             ),
-            if(!_.isLoading.value && _.wallet?.status != WalletStatus.active)
+            if(!controller.isLoading.value && controller.wallet?.status != WalletStatus.active)
               Positioned.fill(
                 child: AbsorbPointer( // Prevents interaction with widgets below
                   child: Container(
