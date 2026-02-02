@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart'; // For GetBuilder
+import 'package:sint/sint.dart'; // For SintBuilder
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/utils/constants/app_assets.dart';
@@ -18,7 +18,7 @@ class WalletCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<WalletController>(
+    return SintBuilder<WalletController>(
       id: AppPageIdConstants.walletHistory, // Ensure this ID matches if you update from controller
       builder: (controller) => Container(
         height: MediaQuery.of(context).size.width / 2, // Slightly taller for more content space

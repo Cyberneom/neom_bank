@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:get/get.dart';
+import 'package:sint/sint.dart';
 import 'package:neom_commons/utils/constants/translations/message_translation_constants.dart';
 import 'package:neom_core/app_config.dart';
 import 'package:neom_core/data/firestore/transaction_firestore.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+import 'package:sint/sint.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_core/app_config.dart';
 import 'package:neom_core/data/firestore/order_firestore.dart';
@@ -18,9 +18,9 @@ import 'package:neom_core/utils/enums/product_type.dart';
 
 import '../data/firestore/wallet_firestore.dart';
 
-class WalletController extends GetxController implements WalletService  {
+class WalletController extends SintController implements WalletService  {
 
-  final userServiceImpl = Get.find<UserService>();
+  final userServiceImpl = Sint.find<UserService>();
 
   RxBool isLoading = true.obs;
 
@@ -270,7 +270,7 @@ class WalletController extends GetxController implements WalletService  {
     try {
       appCoinProduct.value.salePrice!.amount = paymentAmount.value;
       appCoinProduct.value.salePrice!.currency = paymentCurrency.value;
-      Get.toNamed(AppRouteConstants.orderConfirmation, arguments: [appCoinProduct.value]);
+      Sint.toNamed(AppRouteConstants.orderConfirmation, arguments: [appCoinProduct.value]);
     } catch (e) {
       AppConfig.logger.e(e.toString());
     }
