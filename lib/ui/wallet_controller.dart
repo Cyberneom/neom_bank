@@ -16,11 +16,13 @@ import 'package:neom_core/utils/constants/app_route_constants.dart';
 import 'package:neom_core/utils/enums/app_currency.dart';
 import 'package:neom_core/utils/enums/product_type.dart';
 
+import 'package:neom_core/domain/repository/wallet_repository.dart';
 import '../data/firestore/wallet_firestore.dart';
 
 class WalletController extends SintController implements WalletService  {
 
   final userServiceImpl = Sint.find<UserService>();
+  final WalletRepository walletRepository = WalletFirestore();
 
   RxBool isLoading = true.obs;
 
@@ -81,7 +83,7 @@ class WalletController extends SintController implements WalletService  {
   }
   Future<void> loadWallet() async {
     AppConfig.logger.t("Loading Wallet for ${userServiceImpl.user.email}");
-    wallet = await WalletFirestore().getOrCreate(userServiceImpl.user.email);
+    wallet = await walletRepository.getOrCreate(userServiceImpl.user.email);
   }
 
   Future<void> loadTransactions() async {

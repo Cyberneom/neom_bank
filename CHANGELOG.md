@@ -1,34 +1,57 @@
-### 1.0.0 - Initial Release & Architectural Specialization
-This release marks the initial official release (v1.0.0) of neom_bank as a new, independent module within the Open Neom ecosystem. This module is introduced to centralize and manage the platform's financial functionalities, serving as the foundational layer for all internal monetary interactions.
+# Changelog
 
-Key Architectural & Feature Improvements:
+All notable changes to neom_bank will be documented in this file.
 
-Major Architectural Changes:
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-neom_bank is now a dedicated, self-contained module for banking and transaction processes, ensuring a clear separation of concerns from main modules.
+## [1.2.0] - 2025-02-08
 
-Decoupling from Main Modules:
+### Changed
+- **Repository Pattern Enhancement**: `BankController` now uses injected `WalletRepository` instead of direct `WalletFirestore()` instantiation
+- **Dependency Injection**: `WalletController` uses `WalletRepository` interface for wallet operations
+- **Translation Constants**: Added `createdCoupon` and `createdCouponMsg` translation keys
 
-Banking logic, which may have been scattered across main modules, has been extracted and centralized here. This improves modularity and clarifies each module's scope, allowing for a focus on wallet history.
+### Fixed
+- **Deprecated API Migration**: Replaced all `withOpacity()` calls with `withValues(alpha:)` in:
+  - `wallet_card.dart` - Gradient colors, shadows, and borders
+  - `wallet_history_page.dart` - Overlay color
 
-Service-Oriented Architecture:
+### Technical
+- Updated `flutter_lints` to ^6.0.0
+- Improved testability through repository abstraction
 
-The module's controllers exclusively interact with core functionalities through service interfaces (e.g., WalletService, BankService), promoting the Dependency Inversion Principle (DIP).
+## [1.1.0] - Previous Release
 
-Foundational Wallet Capabilities:
+### Added
+- Wallet status validation with overlay for inactive wallets
+- Enhanced wallet card UI with gradient design
 
-Provides initial functionalities for viewing wallet balance and transaction history.
+## [1.0.0] - Initial Release & Architectural Specialization
 
-Implements logic for retrieving and creating a user's wallet (WalletFirestore).
+This release marks the initial official release (v1.0.0) of neom_bank as a new, independent module within the Open Neom ecosystem.
 
-Module-Specific Translations:
+### Added
 
-Introduced BankTranslationConstants to centralize and manage all UI text strings specific to banking functionalities.
+#### Major Architectural Changes
+- Dedicated, self-contained module for banking and transaction processes
+- Clear separation of concerns from main modules
 
-Future-Oriented Development:
+#### Decoupling from Main Modules
+- Banking logic extracted and centralized
+- Improved modularity and scope clarity
 
-This initial release lays the groundwork for a future expansion to include internal transfers, in-app purchases, and integration with an internal economy.
+#### Service-Oriented Architecture
+- Controllers interact through service interfaces (WalletService, BankService)
+- Promotes Dependency Inversion Principle (DIP)
 
-Leverages Core Open Neom Modules:
+#### Foundational Wallet Capabilities
+- Wallet balance viewing and transaction history
+- Wallet retrieval and creation via WalletFirestore
 
-Built upon neom_core for foundational services and neom_commons for shared utilities, ensuring seamless integration within the ecosystem.
+#### Module-Specific Translations
+- BankTranslationConstants for banking-specific UI text
+
+### Technical
+- Built upon neom_core and neom_commons
+- Foundation for future internal transfers and in-app purchases

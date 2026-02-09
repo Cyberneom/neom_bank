@@ -26,7 +26,7 @@ class WalletCard extends StatelessWidget {
           borderRadius: const BorderRadius.all(Radius.circular(20.0)), // Slightly less rounded
           gradient: LinearGradient(
             colors: [
-              AppColor.getMain().withOpacity(0.95), // Slightly more opaque main color
+              AppColor.getMain().withValues(alpha: 0.95), // Slightly more opaque main color
               AppColor.main75, // Your existing secondary gradient color
             ],
             begin: Alignment.topLeft,
@@ -35,18 +35,18 @@ class WalletCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColor.getMain().withOpacity(0.3), // Shadow based on main color
+              color: AppColor.getMain().withValues(alpha: 0.3), // Shadow based on main color
               blurRadius: 15, // Softer blur
               offset: const Offset(0, 8),
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.1), // A darker, more subtle shadow
+              color: Colors.black.withValues(alpha: 0.1), // A darker, more subtle shadow
               blurRadius: 25,
               offset: const Offset(0, 12),
             ),
           ],
           border: Border.all( // Adding a subtle border
-            color: Colors.white.withOpacity(0.15),
+            color: Colors.white.withValues(alpha: 0.15),
             width: 0.5,
           ),
         ),
@@ -64,22 +64,22 @@ class WalletCard extends StatelessWidget {
                     AppTranslationConstants.appCoin.tr.toUpperCase(),
                     style: TextStyle(
                       fontSize: 16,
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontWeight: FontWeight.w600,
                       letterSpacing: 1.5, // Increased letter spacing
                     ),
                   ),
                   Icon(
                     Icons.wallet_rounded, // Material chip icon
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     size: 30,
                   ),
                   if(controller.sellAppCoins) IconButton(
                     iconSize: 30,
                     icon: CircleAvatar(
                       radius: 15,
-                      backgroundColor: Colors.white.withOpacity(0.7),
-                      child: Icon(
+                      backgroundColor: Colors.white.withValues(alpha: 0.7),
+                      child: const Icon(
                         Icons.add,
                         color: Colors.black38,
                         size: 30,

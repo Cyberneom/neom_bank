@@ -72,7 +72,7 @@ class WalletHistoryPage extends StatelessWidget {
               Positioned.fill(
                 child: AbsorbPointer( // Prevents interaction with widgets below
                   child: Container(
-                    color: Colors.black.withOpacity(0.9), // Semi-transparent grey/black overlay
+                    color: Colors.black.withValues(alpha: 0.9), // Semi-transparent grey/black overlay
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.all(AppTheme.padding20),
