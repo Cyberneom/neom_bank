@@ -1,12 +1,12 @@
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
-import 'package:sint/sint.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/utils/constants/translations/common_translation_constants.dart';
 import 'package:neom_core/domain/model/app_product.dart';
 import 'package:neom_core/utils/core_utilities.dart';
 import 'package:neom_core/utils/enums/app_currency.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:sint/sint.dart';
 
 import '../../utils/constants/bank_translation_constants.dart';
 import '../wallet_controller.dart';

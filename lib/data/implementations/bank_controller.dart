@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:sint/sint.dart';
 import 'package:neom_commons/utils/constants/translations/message_translation_constants.dart';
 import 'package:neom_core/app_config.dart';
 import 'package:neom_core/data/firestore/transaction_firestore.dart';
@@ -10,6 +9,7 @@ import 'package:neom_core/domain/repository/wallet_repository.dart';
 import 'package:neom_core/domain/use_cases/bank_service.dart';
 import 'package:neom_core/utils/enums/transaction_status.dart';
 import 'package:neom_core/utils/enums/transaction_type.dart';
+import 'package:sint/sint.dart';
 
 import '../../utils/constants/bank_constants.dart';
 import '../firestore/wallet_firestore.dart';

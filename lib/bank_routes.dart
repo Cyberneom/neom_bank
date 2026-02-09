@@ -1,5 +1,6 @@
-import 'package:sint/sint.dart';
 import 'package:neom_core/utils/constants/app_route_constants.dart';
+import 'package:sint/sint.dart';
+
 import 'ui/wallet_history_page.dart';
 
 class BankRoutes {

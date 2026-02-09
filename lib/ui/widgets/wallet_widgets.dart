@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:sint/sint.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_commons/utils/constants/app_assets.dart';
+import 'package:sint/sint.dart';
 
 import '../../utils/constants/bank_translation_constants.dart';
 import '../wallet_controller.dart';
