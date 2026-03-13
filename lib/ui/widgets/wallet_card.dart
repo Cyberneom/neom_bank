@@ -27,7 +27,7 @@ class WalletCard extends StatelessWidget {
           gradient: LinearGradient(
             colors: [
               AppColor.getMain().withValues(alpha: 0.95), // Slightly more opaque main color
-              AppColor.main75, // Your existing secondary gradient color
+              AppColor.surfaceElevated, // Your existing secondary gradient color
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,

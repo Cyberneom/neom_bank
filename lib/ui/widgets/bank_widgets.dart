@@ -15,7 +15,7 @@ void showGetAppCoinsAlert(BuildContext context, WalletController controller) {
   Alert(
       context: context,
       style: AlertStyle(
-          backgroundColor: AppColor.main50,
+          backgroundColor: AppColor.scaffold,
           titleStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
           titleTextAlign: TextAlign.justify
       ),
@@ -44,7 +44,7 @@ void showGetAppCoinsAlert(BuildContext context, WalletController controller) {
                 iconSize: 20,
                 elevation: 16,
                 style: const TextStyle(color: Colors.white),
-                dropdownColor: AppColor.main75,
+                dropdownColor: AppColor.surfaceElevated,
                 underline: Container(
                   height: 1,
                   color: Colors.grey,
@@ -78,7 +78,7 @@ void showGetAppCoinsAlert(BuildContext context, WalletController controller) {
                 iconSize: 20,
                 elevation: 16,
                 style: const TextStyle(color: Colors.white),
-                dropdownColor: AppColor.main75,
+                dropdownColor: AppColor.surfaceElevated,
                 underline: Container(
                   height: 1,
                   color: Colors.grey,
