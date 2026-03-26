@@ -1,4 +1,5 @@
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/data/firestore/transaction_firestore.dart';
 import 'package:neom_core/domain/model/app_transaction.dart';
 import 'package:neom_core/domain/model/tip.dart';
@@ -107,8 +108,8 @@ class TipController extends SintController implements TipService {
 
       AppConfig.logger.i("Tip $tipId sent successfully. Transaction: ${transaction.id}");
       return true;
-    } catch (e) {
-      AppConfig.logger.e("Error sending tip: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'sendTip');
       return false;
     } finally {
       isLoading.value = false;
@@ -124,8 +125,8 @@ class TipController extends SintController implements TipService {
       final supporters = await _tipFirestore.getTopSupporters(recipientId, limit: limit);
       topSupporters.assignAll(supporters);
       return supporters;
-    } catch (e) {
-      AppConfig.logger.e("Error getting top supporters: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getTopSupporters');
       return [];
     } finally {
       isLoading.value = false;
@@ -139,8 +140,8 @@ class TipController extends SintController implements TipService {
     try {
       isLoading.value = true;
       return await _tipFirestore.getTipsForProfile(recipientId, limit: limit);
-    } catch (e) {
-      AppConfig.logger.e("Error getting tips for profile: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getTipsForProfile');
       return [];
     } finally {
       isLoading.value = false;
@@ -154,8 +155,8 @@ class TipController extends SintController implements TipService {
     try {
       isLoading.value = true;
       return await _tipFirestore.getTipsSentBy(senderId, limit: limit);
-    } catch (e) {
-      AppConfig.logger.e("Error getting tips sent by: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getTipsSentBy');
       return [];
     } finally {
       isLoading.value = false;
@@ -168,8 +169,8 @@ class TipController extends SintController implements TipService {
 
     try {
       return await _tipFirestore.getTotalTipsReceived(recipientId);
-    } catch (e) {
-      AppConfig.logger.e("Error getting total tips received: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getTotalTipsReceived');
       return 0;
     }
   }

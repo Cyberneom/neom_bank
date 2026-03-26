@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:neom_commons/app_flavour.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
-import 'package:neom_commons/ui/widgets/appbar_child.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_commons/utils/constants/translations/app_translation_constants.dart';
 import 'package:neom_core/domain/model/app_transaction.dart';
@@ -26,7 +25,7 @@ class WalletHistoryPage extends StatelessWidget {
       builder: (controller) => Scaffold(
         appBar:  PreferredSize(
             preferredSize: const Size.fromHeight(50),
-            child: AppBarChild(title: AppTranslationConstants.wallet.tr)
+            child: SintAppBar(title: AppTranslationConstants.wallet.tr)
         ),
         backgroundColor: AppFlavour.getBackgroundColor(),
         body: Stack(

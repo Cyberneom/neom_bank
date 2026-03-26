@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/data/firestore/constants/app_firestore_collection_constants.dart';
 import 'package:neom_core/domain/model/tip.dart';
 
@@ -24,8 +25,8 @@ class TipFirestore implements TipRepository {
       await _collection.doc(tip.id).set(tip.toJSON());
       AppConfig.logger.i("Tip ${tip.id} created successfully.");
       return tip.id;
-    } catch (e) {
-      AppConfig.logger.e("Error creating tip: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'createTip');
     }
 
     return '';
@@ -58,8 +59,8 @@ class TipFirestore implements TipRepository {
       }
 
       AppConfig.logger.d("${tips.length} tips retrieved for profile $recipientId");
-    } catch (e) {
-      AppConfig.logger.e("Error getting tips for profile $recipientId: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getTipsForProfile');
     }
 
     return tips;
@@ -92,8 +93,8 @@ class TipFirestore implements TipRepository {
       }
 
       AppConfig.logger.d("${tips.length} tips retrieved sent by $senderId");
-    } catch (e) {
-      AppConfig.logger.e("Error getting tips sent by $senderId: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getTipsSentBy');
     }
 
     return tips;
@@ -138,8 +139,8 @@ class TipFirestore implements TipRepository {
       }
 
       AppConfig.logger.d("${topSupporters.length} top supporters found for $recipientId");
-    } catch (e) {
-      AppConfig.logger.e("Error getting top supporters for $recipientId: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getTopSupporters');
     }
 
     return topSupporters;
@@ -164,8 +165,8 @@ class TipFirestore implements TipRepository {
       }
 
       AppConfig.logger.d("Total tips received for $recipientId: $total");
-    } catch (e) {
-      AppConfig.logger.e("Error getting total tips for $recipientId: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getTotalTipsReceived');
     }
 
     return total;

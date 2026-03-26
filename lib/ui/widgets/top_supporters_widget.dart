@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
+import 'package:neom_commons/ui/widgets/custom_image.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_core/domain/model/tip.dart';
 import 'package:neom_core/domain/use_cases/tip_service.dart';
@@ -190,23 +191,24 @@ class _SupporterCard extends StatelessWidget {
           Stack(
             clipBehavior: Clip.none,
             children: [
-              CircleAvatar(
-                radius: 28,
-                backgroundColor: AppColor.scaffold,
-                backgroundImage: avatarUrl.isNotEmpty
-                    ? NetworkImage(avatarUrl)
-                    : null,
-                child: avatarUrl.isEmpty
-                    ? Text(
+              avatarUrl.isNotEmpty
+                  ? platformCircleAvatar(
+                      imageUrl: avatarUrl,
+                      radius: 28,
+                      backgroundColor: AppColor.scaffold,
+                    )
+                  : CircleAvatar(
+                      radius: 28,
+                      backgroundColor: AppColor.scaffold,
+                      child: Text(
                         name.isNotEmpty ? name[0].toUpperCase() : '?',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
-                      )
-                    : null,
-              ),
+                      ),
+                    ),
               if (rank < 3)
                 Positioned(
                   bottom: -4,

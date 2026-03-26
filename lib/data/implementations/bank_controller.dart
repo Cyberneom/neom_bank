@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:neom_commons/utils/constants/translations/message_translation_constants.dart';
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/data/firestore/transaction_firestore.dart';
 import 'package:neom_core/domain/model/app_transaction.dart';
 import 'package:neom_core/domain/model/wallet.dart';
@@ -45,8 +46,8 @@ class BankController implements BankService {
 
     try {
 
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'init');
     }
   }
 
@@ -70,8 +71,8 @@ class BankController implements BankService {
       }
 
       TransactionFirestore().updateStatus(transaction.id, transaction.status);
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'processTransaction');
       return false;
     }
 
@@ -102,8 +103,8 @@ class BankController implements BankService {
       } else {
         return false;
       }
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'addCoinsToWallet');
       return false;
     }
 

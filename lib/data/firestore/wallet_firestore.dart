@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/data/firestore/constants/app_firestore_collection_constants.dart';
 import 'package:neom_core/data/firestore/constants/app_firestore_constants.dart';
 import 'package:neom_core/domain/model/app_transaction.dart';
@@ -23,8 +24,8 @@ class WalletFirestore implements WalletRepository {
       if(wallet == null) {
         createWallet(walletId);
       }
-    } catch (e) {
-      AppConfig.logger.e("Error retrieving or creating wallet $walletId: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getOrCreate');
     }
 
     return wallet;
@@ -48,8 +49,8 @@ class WalletFirestore implements WalletRepository {
         AppConfig.logger.w("Wallet with ID $walletId not found.");
         return null;
       }
-    } catch (e) {
-      AppConfig.logger.e("Error retrieving wallet $walletId: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getWallet');
       return null;
     }
   }
@@ -67,7 +68,7 @@ class WalletFirestore implements WalletRepository {
 
       AppConfig.logger.i("Wallet for $email not found, creating new one.");
       wallet = Wallet(
-          id: email, // El email es el ID de la billetera
+          id: email,
           createdTime: DateTime.now().millisecondsSinceEpoch,
           lastUpdated: DateTime.now().millisecondsSinceEpoch
       );
@@ -75,8 +76,8 @@ class WalletFirestore implements WalletRepository {
       await walletReference.doc(wallet.id).set(wallet.toJSON());
       AppConfig.logger.i("Wallet for $email created successfully.");
       return wallet;
-    } catch (e) {
-      AppConfig.logger.e("Error checking wallet existence for $email: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'createWallet');
     }
 
     return wallet;
@@ -93,8 +94,8 @@ class WalletFirestore implements WalletRepository {
       await walletReference.doc(walletId).delete();
       AppConfig.logger.i("Wallet document $walletId deleted successfully. Transactions subcollection needs separate handling (e.g., Cloud Function).");
       return true;
-    } catch (e) {
-      AppConfig.logger.e("Error deleting wallet $walletId: ${e.toString()}");
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'deleteWallet');
       return false;
     }
   }
@@ -226,8 +227,8 @@ class WalletFirestore implements WalletRepository {
 
         return true;
       });
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'addTransaction');
     }
 
     return isSuccess;

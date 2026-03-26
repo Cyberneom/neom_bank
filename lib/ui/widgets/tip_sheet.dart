@@ -240,7 +240,7 @@ class _TipSheetState extends State<TipSheet> {
       if (!mounted) return;
 
       if (success) {
-        Navigator.of(context).pop();
+        Sint.pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(

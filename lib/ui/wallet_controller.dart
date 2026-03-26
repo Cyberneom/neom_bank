@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/data/firestore/order_firestore.dart';
 import 'package:neom_core/data/firestore/product_firestore.dart';
 import 'package:neom_core/data/firestore/transaction_firestore.dart';
@@ -50,8 +51,8 @@ class WalletController extends SintController implements WalletService  {
       loadWalletInfo();
       // loadOrders();
       transaction?.senderId = userServiceImpl.user.email;
-    } catch (e) {
-      AppConfig.logger.e(e);
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'onInit');
     }
 
   }
@@ -60,8 +61,8 @@ class WalletController extends SintController implements WalletService  {
   @override
   void onReady() async {
     try {
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'onReady');
     }
   }
 
@@ -74,8 +75,8 @@ class WalletController extends SintController implements WalletService  {
       await loadOrders();
       //TODO await loadCoinProducts();
 
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'loadWalletInfo');
     }
 
     isLoading.value = false;
@@ -149,8 +150,8 @@ class WalletController extends SintController implements WalletService  {
       appCoinProducts.removeWhere((product) => product.id == appCoinProduct.value.id);
       appCoinProducts.add(appCoinProduct.value);
       appCoinProducts.sort((a, b) => a.qty.compareTo(b.qty));
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'changeAppCoinProduct');
     }
 
     update([AppPageIdConstants.walletHistory]);
@@ -169,8 +170,8 @@ class WalletController extends SintController implements WalletService  {
       } else {
         AppConfig.logger.d("Product Currency is the same one as actual: $paymentCurrency");
       }
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'setActualCurrency');
     }
 
     update([AppPageIdConstants.walletHistory]);
@@ -190,8 +191,8 @@ class WalletController extends SintController implements WalletService  {
       } else {
         AppConfig.logger.d("Payment Currency is the same one: $paymentCurrency");
       }
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'changePaymentCurrency');
     }
 
     update([AppPageIdConstants.walletHistory]);
@@ -257,8 +258,8 @@ class WalletController extends SintController implements WalletService  {
       } else {
         AppConfig.logger.d("Payment amount is the same one: $paymentAmount");
       }
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'changePaymentAmount');
     }
 
     update([AppPageIdConstants.walletHistory]);
@@ -273,8 +274,8 @@ class WalletController extends SintController implements WalletService  {
       appCoinProduct.value.salePrice!.amount = paymentAmount.value;
       appCoinProduct.value.salePrice!.currency = paymentCurrency.value;
       Sint.toNamed(AppRouteConstants.orderConfirmation, arguments: [appCoinProduct.value]);
-    } catch (e) {
-      AppConfig.logger.e(e.toString());
+    } catch (e, st) {
+      NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'payAppProduct');
     }
 
     update([AppPageIdConstants.walletHistory]);
