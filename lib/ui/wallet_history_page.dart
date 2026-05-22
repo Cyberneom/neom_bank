@@ -19,6 +19,9 @@ class WalletHistoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWide = screenWidth > 720;
+    final contentMaxWidth = isWide ? 560.0 : screenWidth;
     return SintBuilder<WalletController>(
       id: AppPageIdConstants.walletHistory,
       init: WalletController(),
@@ -34,36 +37,41 @@ class WalletHistoryPage extends StatelessWidget {
               decoration: AppTheme.appBoxDecoration,
               height: AppTheme.fullHeight(context),
               child: controller.isLoading.value ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppTheme.heightSpace20,
-                    Padding(padding: const EdgeInsets.symmetric(horizontal: 40),
-                      child: WalletCard(),
-                    ),
-                    AppTheme.heightSpace20,
-                    Divider(thickness: 1, color: AppColor.white80),
-                    SizedBox(
-                      width: AppTheme.fullWidth(context),
-                      child: Text(
-                        BankTranslationConstants.transactionsHistory.tr,
-                        style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
+              : Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: contentMaxWidth),
+                  child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AppTheme.heightSpace20,
+                      Padding(padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: WalletCard(maxWidth: contentMaxWidth - 80),
                       ),
-                    ),
-                    Divider(thickness: 1, color: AppColor.white80),
-                    SizedBox(
-                      height: AppTheme.fullHeight(context)*0.5,
-                      child: controller.transactions.isNotEmpty ? ListView.builder(
-                          itemCount: controller.transactions.length,
-                          itemBuilder: (context, index) {
-                            AppTransaction transaction = controller.transactions.values.elementAt(index);
-                            return TransactionTile(transaction: transaction, walletId: controller.wallet?.id ?? '',);
-                          }
-                      ) :  buildNoHistoryToShow(context, controller),
-                    ),
-                  ],
+                      AppTheme.heightSpace20,
+                      Divider(thickness: 1, color: AppColor.white80),
+                      SizedBox(
+                        width: contentMaxWidth,
+                        child: Text(
+                          BankTranslationConstants.transactionsHistory.tr,
+                          style: const TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      Divider(thickness: 1, color: AppColor.white80),
+                      SizedBox(
+                        height: AppTheme.fullHeight(context)*0.5,
+                        child: controller.transactions.isNotEmpty ? ListView.builder(
+                            itemCount: controller.transactions.length,
+                            itemBuilder: (context, index) {
+                              AppTransaction transaction = controller.transactions.values.elementAt(index);
+                              return TransactionTile(transaction: transaction, walletId: controller.wallet?.id ?? '',);
+                            }
+                        ) :  buildNoHistoryToShow(context, controller),
+                      ),
+                    ],
+                  ),
+                  ),
                 ),
               ),
             ),

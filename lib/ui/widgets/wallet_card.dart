@@ -14,14 +14,22 @@ import 'bank_widgets.dart';
 class WalletCard extends StatelessWidget {
   const WalletCard({
     super.key,
+    this.maxWidth,
   });
+
+  /// Optional cap for card sizing on wide (web/desktop) screens.
+  /// When null, falls back to the device width (mobile behaviour).
+  final double? maxWidth;
 
   @override
   Widget build(BuildContext context) {
+    final referenceWidth = maxWidth ?? MediaQuery.of(context).size.width;
+    final cardHeight = (referenceWidth / 2).clamp(180.0, 320.0);
+    final iconSize = (referenceWidth / 7.5).clamp(48.0, 96.0);
     return SintBuilder<WalletController>(
       id: AppPageIdConstants.walletHistory, // Ensure this ID matches if you update from controller
       builder: (controller) => Container(
-        height: MediaQuery.of(context).size.width / 2, // Slightly taller for more content space
+        height: cardHeight,
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(20.0)), // Slightly less rounded
           gradient: LinearGradient(
@@ -96,8 +104,8 @@ class WalletCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
-                      width: AppTheme.fullWidth(context) / 7.5, // Adjusted icon size
-                      height: AppTheme.fullWidth(context) / 7.5,
+                      width: iconSize,
+                      height: iconSize,
                       child: ClipRRect(
                         borderRadius: const BorderRadius.all(Radius.circular(12.0)),
                         child: Image.asset(AppAssets.appCoin, fit: BoxFit.contain),
