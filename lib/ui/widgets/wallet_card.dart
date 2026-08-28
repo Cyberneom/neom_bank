@@ -132,7 +132,7 @@ class WalletCard extends StatelessWidget {
               //   "**** **** **** ${controller.wallet.id.isNotEmpty ? controller.wallet.id.substring(controller.wallet.id.length - min(4,controller.wallet.id.length)) : '****'}", // Display last 4 digits of wallet ID or a placeholder
               //   style: TextStyle(
               //     fontSize: 15,
-              //     color: Colors.white.withOpacity(0.75),
+              //     color: Colors.white.withValues(alpha: 0.75),
               //     letterSpacing: 2.5, // Wider spacing for card number feel
               //     fontFamily: 'monospace', // Monospace font for card numbers
               //   ),
