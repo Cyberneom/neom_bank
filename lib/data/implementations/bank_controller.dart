@@ -56,15 +56,27 @@ class BankController implements BankService {
     AppConfig.logger.d('Processing transaction: ${transaction.id}');
 
     try {
-      if(BankConstants.userTransactions.contains(transaction.type)
-          && (wallet.balance < transaction.amount)) {
-        AppConfig.logger.e(MessageTranslationConstants.notEnoughFundsMsg.tr);
-        return false;
+      if (BankConstants.userTransactions.contains(transaction.type)) {
+        final senderWalletId = transaction.senderId ?? '';
+        if (senderWalletId.isNotEmpty) {
+          final liveWallet = await _walletRepository.getOrCreate(senderWalletId);
+          if (liveWallet != null) {
+            wallet = liveWallet;
+          }
+        }
+        if (wallet.balance < transaction.amount) {
+          AppConfig.logger.e(MessageTranslationConstants.notEnoughFundsMsg.tr);
+          return false;
+        }
       }
 
       if(await _walletRepository.addTransaction(transaction)) {
         AppConfig.logger.d('Transaction added successfully: ${transaction.id}');
         transaction.status = TransactionStatus.completed;
+        if (BankConstants.userTransactions.contains(transaction.type) &&
+            wallet.id == transaction.senderId) {
+          wallet.balance = (wallet.balance - transaction.amount).clamp(0.0, double.infinity);
+        }
       } else {
         AppConfig.logger.d('Failed to add transaction: ${transaction.id}');
         transaction.status = TransactionStatus.failed;

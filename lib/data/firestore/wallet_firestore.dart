@@ -20,10 +20,7 @@ class WalletFirestore implements WalletRepository {
     Wallet? wallet;
     try {
       wallet = await getWallet(walletId);
-
-      if(wallet == null) {
-        createWallet(walletId);
-      }
+      wallet ??= await createWallet(walletId);
     } catch (e, st) {
       NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getOrCreate');
     }
