@@ -113,9 +113,15 @@ class WalletCard extends StatelessWidget {
                     ),
                     AppTheme.heightSpace10, // Increased space
                     Text(
-                      // Ensure controller.wallet.balance is available and is a number
-                      (controller.wallet?.balance.truncate() ?? 0).toString().replaceAllMapped(
-                          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},'),
+                      // Ensure controller.wallet.balance is available and finite
+                      ((controller.wallet?.balance.isFinite ?? false)
+                              ? controller.wallet!.balance.truncate()
+                              : 0)
+                          .toString()
+                          .replaceAllMapped(
+                            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                            (Match m) => '${m[1]},',
+                          ),
                       style: const TextStyle(
                         fontSize: 40, // Prominent balance
                         fontWeight: FontWeight.bold,
