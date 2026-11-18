@@ -188,8 +188,11 @@ void main() {
 
   // ─────────────────── TipTier ───────────────────
   group('TipTier', () {
-    test('3 tiers con montos correctos', () {
-      expect(TipTier.values, hasLength(3));
+    test('4 tiers con montos correctos (incluyendo aplauso de 1 GigCoin)', () {
+      expect(TipTier.values, hasLength(4));
+
+      expect(TipTier.aplauso.coins, 1);
+      expect(TipTier.aplauso.label, 'aplauso');
 
       expect(TipTier.cafe.coins, 5);
       expect(TipTier.cafe.label, 'cafe');
@@ -202,12 +205,14 @@ void main() {
     });
 
     test('tiers ordenados de menor a mayor', () {
+      expect(TipTier.aplauso.coins, lessThan(TipTier.cafe.coins));
       expect(TipTier.cafe.coins, lessThan(TipTier.cuerdas.coins));
       expect(TipTier.cuerdas.coins, lessThan(TipTier.amplificador.coins));
     });
 
     test('valor en MXN de cada tier', () {
       // 1 appCoin = 5 MXN
+      expect(TipTier.aplauso.coins * AppPaymentConstants.appCoinToMxn, 5.0);     // $5 MXN
       expect(TipTier.cafe.coins * AppPaymentConstants.appCoinToMxn, 25.0);      // $25 MXN
       expect(TipTier.cuerdas.coins * AppPaymentConstants.appCoinToMxn, 125.0);  // $125 MXN
       expect(TipTier.amplificador.coins * AppPaymentConstants.appCoinToMxn, 500.0); // $500 MXN

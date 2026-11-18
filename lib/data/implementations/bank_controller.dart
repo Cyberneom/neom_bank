@@ -2,12 +2,14 @@ import 'dart:async';
 
 import 'package:neom_commons/utils/constants/translations/message_translation_constants.dart';
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/data/api/app_platform_api.dart';
 import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/data/firestore/transaction_firestore.dart';
 import 'package:neom_core/domain/model/app_transaction.dart';
 import 'package:neom_core/domain/model/wallet.dart';
 import 'package:neom_core/domain/repository/wallet_repository.dart';
 import 'package:neom_core/domain/use_cases/bank_service.dart';
+import 'package:neom_core/domain/use_cases/user_service.dart';
 import 'package:neom_core/utils/enums/transaction_status.dart';
 import 'package:neom_core/utils/enums/transaction_type.dart';
 import 'package:sint/sint.dart';
@@ -45,7 +47,15 @@ class BankController implements BankService {
     AppConfig.logger.t('AppBankController Controller Initialization');
 
     try {
-
+      if (Sint.isRegistered<UserService>()) {
+        final email = Sint.find<UserService>().user.email;
+        if (email.isNotEmpty) {
+          final loaded = await _walletRepository.getOrCreate(email);
+          if (loaded != null) {
+            wallet = loaded;
+          }
+        }
+      }
     } catch (e, st) {
       NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'init');
     }
@@ -56,6 +66,16 @@ class BankController implements BankService {
     AppConfig.logger.d('Processing transaction: ${transaction.id}');
 
     try {
+      final senderKey = (transaction.senderId?.isNotEmpty ?? false)
+          ? transaction.senderId!
+          : (Sint.isRegistered<UserService>() ? Sint.find<UserService>().user.email : wallet.id);
+      if (senderKey.isNotEmpty) {
+        final refreshed = await _walletRepository.getOrCreate(senderKey);
+        if (refreshed != null) {
+          wallet = refreshed;
+        }
+      }
+
       if(BankConstants.userTransactions.contains(transaction.type)
           && (wallet.balance < transaction.amount)) {
         AppConfig.logger.e(MessageTranslationConstants.notEnoughFundsMsg.tr);
@@ -65,12 +85,17 @@ class BankController implements BankService {
       if(await _walletRepository.addTransaction(transaction)) {
         AppConfig.logger.d('Transaction added successfully: ${transaction.id}');
         transaction.status = TransactionStatus.completed;
+        if (BankConstants.userTransactions.contains(transaction.type)) {
+          wallet.balance = (wallet.balance - transaction.amount).clamp(0.0, double.infinity);
+        }
       } else {
         AppConfig.logger.d('Failed to add transaction: ${transaction.id}');
         transaction.status = TransactionStatus.failed;
       }
 
-      TransactionFirestore().updateStatus(transaction.id, transaction.status);
+      if (!AppPlatformApi.isEnabled && transaction.id.isNotEmpty) {
+        TransactionFirestore().updateStatus(transaction.id, transaction.status);
+      }
     } catch (e, st) {
       NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'processTransaction');
       return false;

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/data/api/app_platform_api.dart';
 import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/data/firestore/constants/app_firestore_collection_constants.dart';
 import 'package:neom_core/data/firestore/constants/app_firestore_constants.dart';
@@ -17,12 +18,32 @@ class WalletFirestore implements WalletRepository {
   @override
   Future<Wallet?> getOrCreate(String walletId) async {
     AppConfig.logger.t("Retrieving or creating wallet: $walletId");
+    if (AppPlatformApi.isEnabled) {
+      try {
+        return await AppPlatformApi.client('wallets').read<Wallet?>(
+          'getOrCreate',
+          {'walletId': walletId},
+          decode: (res) {
+            final raw = res['value'];
+            if (raw is Map) {
+              return Wallet.fromJSON(Map<String, dynamic>.from(raw));
+            }
+            return null;
+          },
+          fallback: () => null,
+        );
+      } catch (e, st) {
+        NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getOrCreate.platform');
+        return null;
+      }
+    }
+
     Wallet? wallet;
     try {
       wallet = await getWallet(walletId);
 
       if(wallet == null) {
-        createWallet(walletId);
+        wallet = await createWallet(walletId);
       }
     } catch (e, st) {
       NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'getOrCreate');
@@ -33,6 +54,9 @@ class WalletFirestore implements WalletRepository {
 
   @override
   Future<Wallet?> getWallet(String walletId) async {
+    if (AppPlatformApi.isEnabled) {
+      return getOrCreate(walletId);
+    }
     if (walletId.isEmpty) {
       AppConfig.logger.w("Wallet ID (email) is empty, cannot retrieve.");
       return null;
@@ -57,6 +81,9 @@ class WalletFirestore implements WalletRepository {
 
   @override
   Future<Wallet?> createWallet(String email) async {
+    if (AppPlatformApi.isEnabled) {
+      return getOrCreate(email);
+    }
     AppConfig.logger.t("Creating wallet for email: $email");
     Wallet? wallet;
 
@@ -103,6 +130,20 @@ class WalletFirestore implements WalletRepository {
   @override
   Future<bool> addTransaction(AppTransaction transaction) async {
     AppConfig.logger.d("addTransaction ${transaction.toString()}");
+
+    if (AppPlatformApi.isEnabled) {
+      try {
+        final result = await AppPlatformApi.client('wallets').mutate(
+          'addTransaction',
+          {'transaction': transaction.toJSON()},
+          durable: false,
+        );
+        return result is Map && result['ok'] == true;
+      } catch (e, st) {
+        NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'addTransaction.platform');
+        return false;
+      }
+    }
 
     bool isSuccess = false;
 

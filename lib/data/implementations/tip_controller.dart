@@ -1,4 +1,7 @@
+import 'package:flutter/widgets.dart';
+import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/data/api/app_platform_api.dart';
 import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/data/firestore/transaction_firestore.dart';
 import 'package:neom_core/domain/model/app_transaction.dart';
@@ -12,7 +15,10 @@ import 'package:neom_core/utils/enums/transaction_status.dart';
 import 'package:neom_core/utils/enums/transaction_type.dart';
 import 'package:sint/sint.dart';
 
+import '../../ui/wallet_controller.dart';
+import '../../ui/widgets/tip_sheet.dart';
 import '../firestore/tip_firestore.dart';
+import 'bank_controller.dart';
 
 /// Tip controller implementing [TipService] for tip processing.
 ///
@@ -25,6 +31,23 @@ class TipController extends SintController implements TipService {
 
   final topSupporters = <Tip>[].obs;
   final isLoading = false.obs;
+
+  @override
+  Future<void> showTipModal(
+    BuildContext context, {
+    required String recipientId,
+    required String recipientName,
+    String? contextType,
+    String? contextId,
+  }) {
+    return TipSheet.show(
+      context,
+      recipientId: recipientId,
+      recipientName: recipientName,
+      contextType: contextType,
+      contextId: contextId,
+    );
+  }
 
   @override
   Future<bool> sendTip({
@@ -49,11 +72,42 @@ class TipController extends SintController implements TipService {
         return false;
       }
 
-      /// Get BankService to process the transaction.
-      final BankService bankService = Sint.find<BankService>();
-
       /// Validate sender has enough balance.
       final double tipAmount = tier.coins.toDouble();
+
+      if (AppPlatformApi.isEnabled) {
+        final result = await AppPlatformApi.client('tips').mutate(
+          'sendTip',
+          {
+            'recipientId': recipientId,
+            'recipientProfileId': recipientId,
+            'senderName': currentProfile.name,
+            'senderAvatarUrl': currentProfile.photoUrl,
+            'tier': tier.name,
+            'amount': tipAmount,
+            'message': message ?? '',
+            'contextType': contextType ?? 'song',
+            'contextId': contextId ?? '',
+          },
+          durable: false,
+        );
+        if (result is Map && (result['tipId']?.toString().isNotEmpty ?? false)) {
+          final newBalance = (result['balance'] as num?)?.toDouble();
+          if (newBalance != null) {
+            BankController().wallet.balance = newBalance;
+            if (Sint.isRegistered<WalletController>()) {
+              final wc = Sint.find<WalletController>();
+              wc.wallet?.balance = newBalance;
+              wc.update([AppPageIdConstants.walletHistory]);
+            }
+          }
+          return true;
+        }
+        return false;
+      }
+
+      /// Get BankService to process the transaction.
+      final BankService bankService = Sint.find<BankService>();
 
       /// Create the Tip model.
       final int now = DateTime.now().millisecondsSinceEpoch;

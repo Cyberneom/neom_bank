@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_core/domain/use_cases/tip_service.dart';
+import 'package:neom_core/utils/constants/app_route_constants.dart';
 import 'package:neom_core/utils/enums/tip_tier.dart';
 import 'package:sint/sint.dart';
 
@@ -11,7 +12,7 @@ import '../wallet_controller.dart';
 /// A modal bottom sheet that allows users to send a tip (GigCoins)
 /// to a recipient by selecting a [TipTier] and an optional message.
 ///
-/// Displays three tier cards (Cafe, Cuerdas, Amplificador),
+/// Displays tier cards (Aplauso, Cafe, Cuerdas, Amplificador),
 /// a message text field, the user's current balance, and a send button.
 class TipSheet extends StatefulWidget {
   final String recipientId;
@@ -27,15 +28,47 @@ class TipSheet extends StatefulWidget {
     this.contextId,
   });
 
+  static Future<void> show(
+    BuildContext context, {
+    required String recipientId,
+    required String recipientName,
+    String? contextType,
+    String? contextId,
+  }) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => TipSheet(
+        recipientId: recipientId,
+        recipientName: recipientName,
+        contextType: contextType,
+        contextId: contextId,
+      ),
+    );
+  }
+
   @override
   State<TipSheet> createState() => _TipSheetState();
 }
 
 class _TipSheetState extends State<TipSheet> {
 
-  TipTier _selectedTier = TipTier.cafe;
+  TipTier _selectedTier = TipTier.aplauso;
   final TextEditingController _messageController = TextEditingController();
   bool _isSending = false;
+  late final WalletController _walletController;
+
+  @override
+  void initState() {
+    super.initState();
+    _walletController = Sint.isRegistered<WalletController>()
+        ? Sint.find<WalletController>()
+        : Sint.put(WalletController());
+    _walletController.loadWallet().then((_) {
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -45,8 +78,7 @@ class _TipSheetState extends State<TipSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final WalletController walletController = Sint.find<WalletController>();
-    final double currentBalance = walletController.wallet?.balance ?? 0;
+    final double currentBalance = _walletController.wallet?.balance ?? 0;
 
     return Container(
       decoration: BoxDecoration(
@@ -185,39 +217,58 @@ class _TipSheetState extends State<TipSheet> {
     final bool hasEnoughBalance = currentBalance >= _selectedTier.coins;
     final bool canSend = hasEnoughBalance && !_isSending;
 
-    return SizedBox(
-      width: double.infinity,
-      height: 48,
-      child: ElevatedButton(
-        onPressed: canSend ? () => _sendTip() : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: canSend ? Colors.amber : Colors.grey.shade700,
-          foregroundColor: Colors.black,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-          elevation: canSend ? 4 : 0,
-        ),
-        child: _isSending
-            ? const SizedBox(
-                width: 22,
-                height: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: Colors.black,
-                ),
-              )
-            : Text(
-                hasEnoughBalance
-                    ? '${TipTranslationConstants.tipSend.tr}  ${_selectedTier.coins} ${TipTranslationConstants.tipCoins.tr}'
-                    : TipTranslationConstants.tipInsufficientBalance.tr,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: canSend ? Colors.black : Colors.white54,
-                ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          height: 48,
+          child: ElevatedButton(
+            onPressed: canSend ? () => _sendTip() : null,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: canSend ? Colors.amber : Colors.grey.shade700,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
               ),
-      ),
+              elevation: canSend ? 4 : 0,
+            ),
+            child: _isSending
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.black,
+                    ),
+                  )
+                : Text(
+                    hasEnoughBalance
+                        ? '${TipTranslationConstants.tipSend.tr}  ${_selectedTier.coins} ${TipTranslationConstants.tipCoins.tr}'
+                        : TipTranslationConstants.tipInsufficientBalance.tr,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: canSend ? Colors.black : Colors.white54,
+                    ),
+                  ),
+          ),
+        ),
+        if (!hasEnoughBalance) ...[
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: () {
+              Navigator.of(context).pop();
+              Sint.toNamed(AppRouteConstants.wallet);
+            },
+            icon: const Icon(Icons.add_circle_outline, color: Colors.amber, size: 18),
+            label: const Text(
+              'Recargar GigCoins en mi Wallet',
+              style: TextStyle(color: Colors.amber, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ],
     );
   }
 
@@ -240,7 +291,9 @@ class _TipSheetState extends State<TipSheet> {
       if (!mounted) return;
 
       if (success) {
-        Sint.pop();
+        await _walletController.loadWallet();
+        if (!mounted) return;
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -347,6 +400,8 @@ class _TipTierCard extends StatelessWidget {
 
   String get _tierEmoji {
     switch (tier) {
+      case TipTier.aplauso:
+        return '\uD83D\uDC4F';
       case TipTier.cafe:
         return '\u2615';
       case TipTier.cuerdas:
@@ -358,6 +413,8 @@ class _TipTierCard extends StatelessWidget {
 
   String get _tierTranslationKey {
     switch (tier) {
+      case TipTier.aplauso:
+        return TipTranslationConstants.tipAplauso;
       case TipTier.cafe:
         return TipTranslationConstants.tipCafe;
       case TipTier.cuerdas:

@@ -5,6 +5,7 @@ class TipEsTranslations {
   static const Map<String, String> values = {
     TipTranslationConstants.tipSupport: 'Apoyar',
     TipTranslationConstants.tipSupportArtist: 'Apoyar a',
+    TipTranslationConstants.tipAplauso: 'Aplauso',
     TipTranslationConstants.tipCafe: 'Cafe',
     TipTranslationConstants.tipCuerdas: 'Cuerdas',
     TipTranslationConstants.tipAmplificador: 'Amplificador',

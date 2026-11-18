@@ -3,6 +3,7 @@ class TipTranslationConstants {
 
   static const String tipSupport = 'tip.support';
   static const String tipSupportArtist = 'tip.supportArtist';
+  static const String tipAplauso = 'tip.aplauso';
   static const String tipCafe = 'tip.cafe';
   static const String tipCuerdas = 'tip.cuerdas';
   static const String tipAmplificador = 'tip.amplificador';

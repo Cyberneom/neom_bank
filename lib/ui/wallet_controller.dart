@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
+import 'package:neom_commons/utils/external_utilities.dart';
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/data/api/app_platform_api.dart';
 import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:neom_core/data/firestore/order_firestore.dart';
 import 'package:neom_core/data/firestore/product_firestore.dart';
@@ -8,6 +11,7 @@ import 'package:neom_core/data/firestore/transaction_firestore.dart';
 import 'package:neom_core/domain/model/app_order.dart';
 import 'package:neom_core/domain/model/app_product.dart';
 import 'package:neom_core/domain/model/app_transaction.dart';
+import 'package:neom_core/domain/model/price.dart';
 import 'package:neom_core/domain/model/wallet.dart';
 import 'package:neom_core/domain/repository/wallet_repository.dart';
 import 'package:neom_core/domain/use_cases/user_service.dart';
@@ -28,6 +32,12 @@ class WalletController extends SintController implements WalletService  {
   RxBool isLoading = true.obs;
 
   Wallet? wallet;
+
+  @override
+  double get balance => wallet?.balance ?? 0;
+
+  @override
+  Future<void> refreshWallet() => loadWallet();
   Map<String, AppTransaction> transactions = {};
   Map<String, AppOrder> orders = {};
 
@@ -72,8 +82,12 @@ class WalletController extends SintController implements WalletService  {
     try {
       await loadWallet();
       await loadTransactions();
-      await loadOrders();
-      //TODO await loadCoinProducts();
+      if (!AppPlatformApi.isEnabled) {
+        await loadOrders();
+      } else {
+        sellAppCoins = true;
+        await loadCoinProducts();
+      }
 
     } catch (e, st) {
       NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'loadWalletInfo');
@@ -89,6 +103,27 @@ class WalletController extends SintController implements WalletService  {
 
   Future<void> loadTransactions() async {
     AppConfig.logger.d("Loading Transactions for ${userServiceImpl.user.email}");
+
+    if (AppPlatformApi.isEnabled) {
+      final list = await AppPlatformApi.client('wallets').read<List<AppTransaction>>(
+        'getTransactions',
+        {'limit': 50},
+        decode: (res) {
+          final raw = res['items'];
+          if (raw is List) {
+            return raw
+                .map((e) => AppTransaction.fromJSON(Map<String, dynamic>.from(e as Map)))
+                .toList();
+          }
+          return <AppTransaction>[];
+        },
+        fallback: () => <AppTransaction>[],
+      );
+      transactions = {
+        for (final tx in list) tx.id: tx,
+      };
+      return;
+    }
 
     transactions = await TransactionFirestore().retrieveByEmail(userServiceImpl.user.email);
     List<AppTransaction> transactionsToSort = transactions.values.toList();
@@ -112,6 +147,28 @@ class WalletController extends SintController implements WalletService  {
   }
 
   Future<void> loadCoinProducts() async {
+    if (AppPlatformApi.isEnabled) {
+      const tiers = <int>[10, 20, 50, 100];
+      appCoinProducts = tiers
+          .map((qty) => AppProduct(
+                id: 'gigcoins_$qty',
+                name: 'Paquete $qty GigCoins',
+                description: '$qty GigCoins para impulsar artistas, reservar salas y comprar boletos QR',
+                type: ProductType.appCoin,
+                qty: qty,
+                regularPrice: Price(amount: qty * AppPaymentConstants.appCoinToMxn, currency: AppCurrency.mxn),
+                salePrice: Price(amount: qty * AppPaymentConstants.appCoinToMxn, currency: AppCurrency.mxn),
+              ))
+          .toList();
+      appCoinStaticProducts = appCoinProducts
+          .map((p) => AppProduct.fromJSON(p.toJSON()))
+          .toList();
+      appCoinProduct.value = appCoinProducts.first;
+      paymentCurrency.value = AppCurrency.mxn;
+      paymentAmount.value = appCoinProduct.value.salePrice?.amount ?? 50.0;
+      return;
+    }
+
     appCoinProducts = await ProductFirestore()
         .retrieveProductsByType(type: ProductType.appCoin);
 
@@ -271,10 +328,60 @@ class WalletController extends SintController implements WalletService  {
     AppConfig.logger.d("Entering payAppProduct Method");
 
     try {
+      if (AppPlatformApi.isEnabled) {
+        isButtonDisabled.value = true;
+        isLoading.value = true;
+        final coins = appCoinProduct.value.qty > 0 ? appCoinProduct.value.qty : 10;
+        final origin = kIsWeb ? Uri.base.origin : 'https://gigmeout.com';
+        final session = await AppPlatformApi.client('payments').mutate(
+          'createCheckoutSession',
+          {
+            'purpose': 'gigcoin_topup',
+            'coins': coins,
+            'originUrl': origin,
+          },
+          durable: false,
+        );
+        if (session is Map) {
+          if (session['sandbox'] == true) {
+            await AppPlatformApi.client('payments').mutate(
+              'verifyCheckoutSession',
+              {
+                'localSessionId': session['sessionId'],
+                'sandboxToken': session['sandboxToken'],
+              },
+              durable: false,
+            );
+            await loadWallet();
+            await loadTransactions();
+            if (context.mounted) {
+              Navigator.of(context, rootNavigator: true).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('¡Se acreditaron $coins GigCoins a tu Wallet!'),
+                  backgroundColor: Colors.green.shade700,
+                ),
+              );
+            }
+          } else if (session['checkoutUrl']?.toString().isNotEmpty ?? false) {
+            if (context.mounted) {
+              Navigator.of(context, rootNavigator: true).pop();
+            }
+            ExternalUtilities.launchURL(session['checkoutUrl'].toString(), sameTab: true);
+          }
+        }
+        isLoading.value = false;
+        isButtonDisabled.value = false;
+        update([AppPageIdConstants.walletHistory]);
+        return;
+      }
+
       appCoinProduct.value.salePrice!.amount = paymentAmount.value;
       appCoinProduct.value.salePrice!.currency = paymentCurrency.value;
       Sint.toNamed(AppRouteConstants.orderConfirmation, arguments: [appCoinProduct.value]);
     } catch (e, st) {
+      isLoading.value = false;
+      isButtonDisabled.value = false;
       NeomErrorLogger.recordError(e, st, module: 'neom_bank', operation: 'payAppProduct');
     }
 
