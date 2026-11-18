@@ -18,11 +18,14 @@ dependencies:
   neom_commons:
     git:
       url: git@github.com:Open-Neom/neom_commons.git
+  sint_sentinel: ^1.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
   flutter_lints: ^6.0.0
+
+
 
 flutter:

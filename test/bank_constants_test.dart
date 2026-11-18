@@ -22,14 +22,15 @@ void main() {
       );
     });
 
-    test('userTransactions contains exactly the 3 user-origin types', () {
-      expect(BankConstants.userTransactions, hasLength(3));
+    test('userTransactions contains all 4 user-origin debit types (including tip)', () {
+      expect(BankConstants.userTransactions, hasLength(4));
       expect(
         BankConstants.userTransactions,
         containsAll([
           TransactionType.withdrawal,
           TransactionType.purchase,
           TransactionType.transfer,
+          TransactionType.tip,
         ]),
       );
     });
@@ -45,9 +46,13 @@ void main() {
       }
     });
 
-    test('tip is in NEITHER list (handled via dedicated tip flow)', () {
+    test('tip is classified in userTransactions so TipController enforces sender balance', () {
       expect(BankConstants.bankTransactions, isNot(contains(TransactionType.tip)));
-      expect(BankConstants.userTransactions, isNot(contains(TransactionType.tip)));
+      expect(BankConstants.userTransactions, contains(TransactionType.tip));
+      expect(
+        () => BankConstants.userTransactions.clear(),
+        throwsUnsupportedError,
+      );
     });
 
     test('processTransaction balance gate simulation: user-txn > balance fails', () {

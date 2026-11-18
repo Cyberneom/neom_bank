@@ -76,8 +76,16 @@ void main() {
       expect(wallet.id, '');
       expect(wallet.balance, 0.0);
       expect(wallet.currency, AppCurrency.appCoin);
-      // fromJSON default es suspended cuando status es invalido
-      expect(wallet.status, WalletStatus.suspended);
+      // status vacio/ausente cae al default seguro active; status desconocido/corrupto falla cerrado a suspended
+      expect(wallet.status, WalletStatus.active);
+
+      final invalidWallet = Wallet.fromJSON({
+        'id': 'w_corrupt',
+        'balance': 10,
+        'currency': 'appCoin',
+        'status': 'invalid_status',
+      });
+      expect(invalidWallet.status, WalletStatus.suspended);
     });
 
     test('balance puede ser fraccionario', () {
