@@ -12,6 +12,9 @@ class TipTranslationConstants {
   static const String tipSend = 'tip.send';
   static const String tipSent = 'tip.sent';
   static const String tipInsufficientBalance = 'tip.insufficientBalance';
+  static const String tipBuyStarterPack = 'tip.buyStarterPack';
+  static const String tipNoCoinsSubtitle = 'tip.noCoinsSubtitle';
+  static const String tipOpenWallet = 'tip.openWallet';
   static const String tipTopSupporters = 'tip.topSupporters';
   static const String tipBeFirst = 'tip.beFirst';
   static const String tipCoins = 'tip.coins';

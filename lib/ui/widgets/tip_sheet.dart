@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:neom_commons/ui/theme/app_color.dart';
 import 'package:neom_commons/ui/theme/app_theme.dart';
 import 'package:neom_core/domain/use_cases/tip_service.dart';
+import 'package:neom_core/domain/use_cases/wallet_service.dart';
 import 'package:neom_core/utils/constants/app_route_constants.dart';
 import 'package:neom_core/utils/enums/tip_tier.dart';
 import 'package:sint/sint.dart';
@@ -13,12 +14,16 @@ import '../wallet_controller.dart';
 /// to a recipient by selecting a [TipTier] and an optional message.
 ///
 /// Displays tier cards (Aplauso, Cafe, Cuerdas, Amplificador),
-/// a message text field, the user's current balance, and a send button.
+/// a message text field, the user's current balance, and either the send
+/// button or a direct CTA to buy the starter pack (10 GigCoins for $50 MXN)
+/// when the user does not have enough GigCoins.
 class TipSheet extends StatefulWidget {
   final String recipientId;
   final String recipientName;
   final String? contextType;
   final String? contextId;
+  final double? initialBalanceOverride;
+  final Future<void> Function(BuildContext context)? onBuyStarterPack;
 
   const TipSheet({
     super.key,
@@ -26,6 +31,8 @@ class TipSheet extends StatefulWidget {
     required this.recipientName,
     this.contextType,
     this.contextId,
+    this.initialBalanceOverride,
+    this.onBuyStarterPack,
   });
 
   static Future<void> show(
@@ -57,17 +64,34 @@ class _TipSheetState extends State<TipSheet> {
   TipTier _selectedTier = TipTier.aplauso;
   final TextEditingController _messageController = TextEditingController();
   bool _isSending = false;
-  late final WalletController _walletController;
+  bool _isLoadingBalance = false;
+  WalletController? _walletController;
 
   @override
   void initState() {
     super.initState();
-    _walletController = Sint.isRegistered<WalletController>()
-        ? Sint.find<WalletController>()
-        : Sint.put(WalletController());
-    _walletController.loadWallet().then((_) {
-      if (mounted) setState(() {});
-    });
+    if (widget.initialBalanceOverride == null) {
+      _walletController = _resolveWalletController();
+      if (_walletController != null) {
+        _isLoadingBalance = _walletController!.wallet == null;
+        _walletController!.loadWallet().whenComplete(() {
+          if (mounted) {
+            setState(() => _isLoadingBalance = false);
+          }
+        });
+      }
+    }
+  }
+
+  WalletController? _resolveWalletController() {
+    if (Sint.isRegistered<WalletController>()) {
+      return Sint.find<WalletController>();
+    }
+    if (Sint.isRegistered<WalletService>()) {
+      final ws = Sint.find<WalletService>();
+      if (ws is WalletController) return ws;
+    }
+    return Sint.put(WalletController());
   }
 
   @override
@@ -78,7 +102,8 @@ class _TipSheetState extends State<TipSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final double currentBalance = _walletController.wallet?.balance ?? 0;
+    final double currentBalance =
+        widget.initialBalanceOverride ?? _walletController?.wallet?.balance ?? 0;
 
     return Container(
       decoration: BoxDecoration(
@@ -212,63 +237,160 @@ class _TipSheetState extends State<TipSheet> {
     );
   }
 
-  /// Send tip button, disabled when balance is insufficient or sending.
+  /// Send tip button when balance is sufficient; otherwise directs the user
+  /// straight to purchase the starter pack (10 GigCoins for $50 MXN).
   Widget _buildSendButton(double currentBalance) {
-    final bool hasEnoughBalance = currentBalance >= _selectedTier.coins;
-    final bool canSend = hasEnoughBalance && !_isSending;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: double.infinity,
-          height: 48,
-          child: ElevatedButton(
-            onPressed: canSend ? () => _sendTip() : null,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: canSend ? Colors.amber : Colors.grey.shade700,
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              elevation: canSend ? 4 : 0,
+    if (_isLoadingBalance) {
+      return SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: ElevatedButton(
+          onPressed: null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.amber.withValues(alpha: 0.5),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
             ),
-            child: _isSending
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: Colors.black,
-                    ),
-                  )
-                : Text(
-                    hasEnoughBalance
-                        ? '${TipTranslationConstants.tipSend.tr}  ${_selectedTier.coins} ${TipTranslationConstants.tipCoins.tr}'
-                        : TipTranslationConstants.tipInsufficientBalance.tr,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: canSend ? Colors.black : Colors.white54,
-                    ),
-                  ),
+          ),
+          child: const SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              color: Colors.black,
+            ),
           ),
         ),
-        if (!hasEnoughBalance) ...[
-          const SizedBox(height: 8),
+      );
+    }
+
+    final bool hasEnoughBalance = currentBalance >= _selectedTier.coins;
+
+    if (!hasEnoughBalance) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.amber.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.amberAccent.withValues(alpha: 0.45),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Text('🪙', style: TextStyle(fontSize: 18)),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    TipTranslationConstants.tipNoCoinsSubtitle.tr,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12.5,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: _isSending ? null : () => _openBuyStarterPack(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 4,
+              ),
+              icon: const Icon(Icons.shopping_cart_checkout_rounded, size: 20),
+              label: Text(
+                TipTranslationConstants.tipBuyStarterPack.tr,
+                style: const TextStyle(
+                  fontSize: 15.5,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
           TextButton.icon(
             onPressed: () {
-              Navigator.of(context).pop();
+              Sint.back();
               Sint.toNamed(AppRouteConstants.wallet);
             },
-            icon: const Icon(Icons.add_circle_outline, color: Colors.amber, size: 18),
-            label: const Text(
-              'Recargar GigCoins en mi Wallet',
-              style: TextStyle(color: Colors.amber, fontWeight: FontWeight.w600),
+            icon: const Icon(
+              Icons.account_balance_wallet_outlined,
+              color: Colors.white70,
+              size: 16,
+            ),
+            label: Text(
+              TipTranslationConstants.tipOpenWallet.tr,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ],
-      ],
+      );
+    }
+
+    final bool canSend = !_isSending;
+
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: ElevatedButton(
+        onPressed: canSend ? () => _sendTip() : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.amber,
+          foregroundColor: Colors.black,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          elevation: canSend ? 4 : 0,
+        ),
+        child: _isSending
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.black,
+                ),
+              )
+            : Text(
+                '${TipTranslationConstants.tipSend.tr}  ${_selectedTier.coins} ${TipTranslationConstants.tipCoins.tr}',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+              ),
+      ),
+    );
+  }
+
+  Future<void> _openBuyStarterPack(BuildContext context) async {
+    Sint.back();
+    if (widget.onBuyStarterPack != null) {
+      await widget.onBuyStarterPack!(context);
+      return;
+    }
+    await _walletController?.buyGigCoinPack(
+      context,
+      qty: WalletController.starterGigCoinsQty,
     );
   }
 
@@ -291,9 +413,9 @@ class _TipSheetState extends State<TipSheet> {
       if (!mounted) return;
 
       if (success) {
-        await _walletController.loadWallet();
+        await _walletController?.loadWallet();
         if (!mounted) return;
-        Navigator.of(context).pop();
+        Sint.back();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -305,6 +427,9 @@ class _TipSheetState extends State<TipSheet> {
           ),
         );
       } else {
+        await _walletController?.loadWallet();
+        if (!mounted) return;
+        setState(() {});
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(TipTranslationConstants.tipInsufficientBalance.tr),
