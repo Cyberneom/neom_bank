@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:neom_commons/utils/constants/app_page_id_constants.dart';
 import 'package:neom_core/app_config.dart';
+import 'package:neom_core/cloud_properties.dart';
 import 'package:neom_core/data/api/app_platform_api.dart';
 import 'package:neom_core/data/firestore/profile_firestore.dart';
 import 'package:neom_core/data/firestore/transaction_firestore.dart';
@@ -39,13 +40,18 @@ class TipController extends SintController implements TipService {
     TransactionRepository? transactionRepository,
     WalletRepository? walletRepository,
     Future<String?> Function(String recipientId)? recipientEmailResolver,
-  })  : _tipFirestore = tipRepository ?? TipFirestore(),
+  })  : _usesCustomRepositories =
+            tipRepository != null ||
+            transactionRepository != null ||
+            walletRepository != null,
+        _tipFirestore = tipRepository ?? TipFirestore(),
         _transactionFirestore = transactionRepository ?? TransactionFirestore(),
         _walletRepository = walletRepository ?? WalletFirestore(),
         _recipientEmailResolver = recipientEmailResolver;
 
   static const int maxTipQueryLimit = TipMessageSanitizer.maxTipQueryLimit;
 
+  final bool _usesCustomRepositories;
   final TipRepository _tipFirestore;
   final TransactionRepository _transactionFirestore;
   final WalletRepository _walletRepository;
@@ -270,6 +276,45 @@ class TipController extends SintController implements TipService {
       /// Resolve canonical recipient owner email (`user.email`) from `toProfile.id`.
       final recipientWalletEmail =
           await resolveRecipientWalletEmail(trimmedRecipient);
+
+      // In live Firebase mode, transfer atomically server-side via `secureOps`
+      // (`sendTip`) so normal fans never hit PERMISSION_DENIED writing to the
+      // recipient artist's protected wallet document.
+      if (!_usesCustomRepositories) {
+        final cloudResult = await CloudProperties.sendTipViaCloud(
+          recipientId: trimmedRecipient,
+          recipientEmail: recipientWalletEmail,
+          senderProfileId: senderProfileId,
+          senderName: currentProfile.name,
+          senderAvatarUrl: currentProfile.photoUrl,
+          tier: tier.name,
+          amount: tipAmount,
+          message: _sanitizeMessage(message),
+          contextType: _sanitizeContextField(contextType, maxChars: 64) ?? 'song',
+          contextId: _sanitizeContextField(contextId, maxChars: 128),
+        );
+        if (cloudResult != null &&
+            (cloudResult['tipId']?.toString().isNotEmpty ?? false)) {
+          final newBalance = (cloudResult['balance'] as num?)?.toDouble();
+          if (newBalance != null && newBalance.isFinite) {
+            BankController().wallet.balance = newBalance;
+            if (Sint.isRegistered<WalletController>()) {
+              final wc = Sint.find<WalletController>();
+              wc.wallet?.balance = newBalance;
+              wc.update([AppPageIdConstants.walletHistory]);
+            }
+          }
+          AppConfig.logger.i(
+            "Cloud tip sent: ${tier.coins} GigCoins to ${cloudResult['recipientEmail']}",
+          );
+          return true;
+        }
+        AppConfig.logger.w(
+          "Cloud sendTip failed or unavailable; aborting unsafe cross-wallet write.",
+        );
+        return false;
+      }
+
       if (recipientWalletEmail == null || recipientWalletEmail.isEmpty) {
         AppConfig.logger.e(
           "Cannot send tip: could not resolve recipient wallet email for $trimmedRecipient.",
