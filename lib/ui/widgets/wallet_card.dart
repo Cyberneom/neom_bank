@@ -29,7 +29,7 @@ class WalletCard extends StatelessWidget {
     return SintBuilder<WalletController>(
       id: AppPageIdConstants.walletHistory, // Ensure this ID matches if you update from controller
       builder: (controller) => Container(
-        height: cardHeight,
+        constraints: BoxConstraints(minHeight: cardHeight),
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(20.0)), // Slightly less rounded
           gradient: LinearGradient(
@@ -59,8 +59,9 @@ class WalletCard extends StatelessWidget {
           ),
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.spaceBetween, // Distribute space
             children: [
@@ -68,13 +69,17 @@ class WalletCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    AppTranslationConstants.appCoin.tr.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 1.5, // Increased letter spacing
+                  Flexible(
+                    child: Text(
+                      AppTranslationConstants.appCoin.tr.toUpperCase(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.white.withValues(alpha: 0.9),
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.5, // Increased letter spacing
+                      ),
                     ),
                   ),
                   Icon(
@@ -99,6 +104,7 @@ class WalletCard extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
               Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -112,21 +118,25 @@ class WalletCard extends StatelessWidget {
                       ),
                     ),
                     AppTheme.heightSpace10, // Increased space
-                    Text(
-                      // Ensure controller.wallet.balance is available and finite
-                      ((controller.wallet?.balance.isFinite ?? false)
-                              ? controller.wallet!.balance.truncate()
-                              : 0)
-                          .toString()
-                          .replaceAllMapped(
-                            RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-                            (Match m) => '${m[1]},',
-                          ),
-                      style: const TextStyle(
-                        fontSize: 40, // Prominent balance
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        letterSpacing: 0.5,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        // Ensure controller.wallet.balance is available and finite
+                        ((controller.wallet?.balance.isFinite ?? false)
+                                ? controller.wallet!.balance.truncate()
+                                : 0)
+                            .toString()
+                            .replaceAllMapped(
+                              RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+                              (Match m) => '${m[1]},',
+                            ),
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontSize: 40, // Prominent balance
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                     ),
                   ],
