@@ -20,6 +20,7 @@ import 'package:neom_core/domain/use_cases/wallet_service.dart';
 import 'package:neom_core/utils/constants/app_payment_constants.dart';
 import 'package:neom_core/utils/constants/app_route_constants.dart';
 import 'package:neom_core/utils/enums/app_currency.dart';
+import 'package:neom_core/utils/enums/app_in_use.dart';
 import 'package:neom_core/utils/enums/product_type.dart';
 import 'package:neom_core/utils/neom_error_logger.dart';
 import 'package:sint/sint.dart';
@@ -28,6 +29,32 @@ import 'package:sint_sentinel/sint_sentinel_core.dart';
 import '../data/firestore/wallet_firestore.dart';
 
 class WalletController extends SintController implements WalletService  {
+
+  /// Default GigCoins starter pack offered when a user wants to support an artist
+  /// without enough GigCoins: 10 GigCoins for $50 MXN ($5 MXN per GigCoin).
+  static const int starterGigCoinsQty = 10;
+  static const double starterGigCoinsPriceMxn =
+      starterGigCoinsQty * AppPaymentConstants.appCoinToMxn;
+
+  static AppProduct buildGigCoinPack({int qty = starterGigCoinsQty}) {
+    final safeQty = qty > 0 ? qty : starterGigCoinsQty;
+    final priceMxn = safeQty * AppPaymentConstants.appCoinToMxn;
+    return AppProduct(
+      id: 'gigcoins_$safeQty',
+      name: 'Paquete $safeQty GigCoins',
+      description:
+          '$safeQty GigCoins para impulsar artistas independientes en Gigmeout (\$${priceMxn.toStringAsFixed(0)} MXN)',
+      type: ProductType.appCoin,
+      qty: safeQty,
+      regularPrice: Price(amount: priceMxn, currency: AppCurrency.mxn),
+      salePrice: Price(amount: priceMxn, currency: AppCurrency.mxn),
+    );
+  }
+
+  static List<AppProduct> defaultGigCoinPacks() {
+    const tiers = <int>[10, 20, 50, 100];
+    return tiers.map((qty) => buildGigCoinPack(qty: qty)).toList();
+  }
 
   static String _maskEmail(String email) {
     final trimmed = email.trim();
@@ -106,7 +133,8 @@ class WalletController extends SintController implements WalletService  {
         await loadTransactions();
         if (!AppPlatformApi.isEnabled) {
           await loadOrders();
-        } else {
+        }
+        if (AppPlatformApi.isEnabled || AppConfig.instance.appInUse == AppInUse.g) {
           sellAppCoins = true;
           await loadCoinProducts();
         }
@@ -185,24 +213,14 @@ class WalletController extends SintController implements WalletService  {
 
   Future<void> loadCoinProducts() async {
     if (AppPlatformApi.isEnabled) {
-      const tiers = <int>[10, 20, 50, 100];
-      appCoinProducts = tiers
-          .map((qty) => AppProduct(
-                id: 'gigcoins_$qty',
-                name: 'Paquete $qty GigCoins',
-                description: '$qty GigCoins para impulsar artistas, reservar salas y comprar boletos QR',
-                type: ProductType.appCoin,
-                qty: qty,
-                regularPrice: Price(amount: qty * AppPaymentConstants.appCoinToMxn, currency: AppCurrency.mxn),
-                salePrice: Price(amount: qty * AppPaymentConstants.appCoinToMxn, currency: AppCurrency.mxn),
-              ))
-          .toList();
+      appCoinProducts = defaultGigCoinPacks();
       appCoinStaticProducts = appCoinProducts
           .map((p) => AppProduct.fromJSON(p.toJSON()))
           .toList();
       appCoinProduct.value = appCoinProducts.first;
       paymentCurrency.value = AppCurrency.mxn;
-      paymentAmount.value = appCoinProduct.value.salePrice?.amount ?? 50.0;
+      paymentAmount.value =
+          appCoinProduct.value.salePrice?.amount ?? starterGigCoinsPriceMxn;
       return;
     }
 
@@ -211,15 +229,34 @@ class WalletController extends SintController implements WalletService  {
       tag: 'WalletController.loadCoinProducts',
     );
     appCoinProducts = List<AppProduct>.from(fetched);
-    appCoinStaticProducts = List<AppProduct>.from(fetched);
+    if (appCoinProducts.isEmpty && AppConfig.instance.appInUse == AppInUse.g) {
+      appCoinProducts = defaultGigCoinPacks();
+    }
+    appCoinStaticProducts = appCoinProducts
+        .map((p) => AppProduct.fromJSON(p.toJSON()))
+        .toList();
 
     if(appCoinProducts.isNotEmpty) {
       appCoinProducts.sort((a, b) => a.qty.compareTo(b.qty));
       appCoinProduct.value = appCoinProducts.first;
 
       paymentCurrency.value = appCoinProduct.value.salePrice?.currency ?? AppCurrency.mxn;
-      paymentAmount.value = appCoinProduct.value.salePrice?.amount ?? 0;
+      paymentAmount.value = appCoinProduct.value.salePrice?.amount ?? starterGigCoinsPriceMxn;
     }
+  }
+
+  /// Launches direct purchase checkout for a GigCoins pack (defaults to
+  /// 10 GigCoins for $50 MXN). Works both with Firebase/Stripe (`orderConfirmation`)
+  /// and with `AppPlatformApi` (`gigcoin_topup`).
+  Future<void> buyGigCoinPack(
+    BuildContext context, {
+    int qty = starterGigCoinsQty,
+  }) async {
+    final pack = buildGigCoinPack(qty: qty);
+    appCoinProduct.value = pack;
+    paymentCurrency.value = AppCurrency.mxn;
+    paymentAmount.value = pack.salePrice?.amount ?? starterGigCoinsPriceMxn;
+    await payAppProduct(context);
   }
 
 
@@ -398,7 +435,7 @@ class WalletController extends SintController implements WalletService  {
             await loadWallet();
             await loadTransactions();
             if (context.mounted) {
-              Navigator.of(context, rootNavigator: true).pop();
+              Sint.back();
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text('¡Se acreditaron $coins GigCoins a tu Wallet!'),
@@ -408,7 +445,7 @@ class WalletController extends SintController implements WalletService  {
             }
           } else if (session['checkoutUrl']?.toString().isNotEmpty ?? false) {
             if (context.mounted) {
-              Navigator.of(context, rootNavigator: true).pop();
+              Sint.back();
             }
             ExternalUtilities.launchURL(session['checkoutUrl'].toString(), sameTab: true);
           }

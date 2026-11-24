@@ -9,6 +9,7 @@ import 'package:neom_core/utils/enums/wallet_status.dart';
 import 'package:sint/sint.dart';
 
 import '../utils/constants/bank_translation_constants.dart';
+import '../utils/constants/tip_translation_constants.dart';
 import 'wallet_controller.dart';
 import 'widgets/transaction_tile.dart';
 import 'widgets/wallet_card.dart';
@@ -48,6 +49,35 @@ class WalletHistoryPage extends StatelessWidget {
                       Padding(padding: const EdgeInsets.symmetric(horizontal: 40),
                         child: WalletCard(maxWidth: contentMaxWidth - 80),
                       ),
+                      if (controller.sellAppCoins) ...[
+                        AppTheme.heightSpace10,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 46,
+                            child: ElevatedButton.icon(
+                              onPressed: () => controller.buyGigCoinPack(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber,
+                                foregroundColor: Colors.black,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                              ),
+                              icon: const Icon(Icons.shopping_cart_checkout_rounded, size: 19),
+                              label: Text(
+                                TipTranslationConstants.tipBuyStarterPack.tr,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14.5,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                       AppTheme.heightSpace20,
                       Divider(thickness: 1, color: AppColor.white80),
                       SizedBox(
